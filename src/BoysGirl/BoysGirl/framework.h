@@ -35,6 +35,37 @@
 
 #include <string>
 
+#define WM_USER_NOTIFYICON WM_USER + WM_NOTIFY + 1
+
+#if !defined(UNICODE) && !defined(_UNICODE)
+#define TSTRING std::string
+#else
+#define TSTRING std::wstring
+#endif
+template <typename ...Args>
+__inline static std::string format_string(const char* format, Args... args) {
+    char buffer[BUFSIZ] = { 0 };
+    size_t newlen = _snprintf(buffer, BUFSIZ, format, args...);
+    if (newlen > BUFSIZ)
+    {
+        std::vector<char> newbuffer(newlen + 1);
+        snprintf(newbuffer.data(), newlen, format, args...);
+        return std::string(newbuffer.data());
+    }
+    return buffer;
+}
+template <typename ...Args>
+__inline static std::wstring format_string(const wchar_t* format, Args... args) {
+    wchar_t buffer[BUFSIZ] = { 0 };
+    size_t newlen = _snwprintf(buffer, BUFSIZ, format, args...);
+    if (newlen > BUFSIZ)
+    {
+        std::vector<wchar_t> newbuffer(newlen + 1);
+        _snwprintf(newbuffer.data(), newlen, format, args...);
+        return std::wstring(newbuffer.data());
+    }
+    return buffer;
+}
 
 // This macro is the same as IMPLEMENT_OLECREATE, except it passes TRUE
 // for the bMultiInstance parameter to the COleObjectFactory constructor.

@@ -81,7 +81,7 @@ void CFloatDlg::OnLButtonDblClk(UINT nFlags, CPoint point)
 	}
 	else
 	{
-		theApp.m_pMainDlg->ShowWindow(SW_SHOWNORMAL);
+		theApp.m_pMainDlg->ShowWindow(SW_SHOW);
 	}
 	CDialogEx::OnLButtonDblClk(nFlags, point);
 }

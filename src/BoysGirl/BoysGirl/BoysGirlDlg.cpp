@@ -80,6 +80,8 @@ BEGIN_MESSAGE_MAP(CBoysGirlDlg, CDialogEx)
 	ON_WM_CLOSE()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_MESSAGE(WM_USER_NOTIFYICON, OnNotifyMsg)
+	ON_REGISTERED_MESSAGE(WMEX_TASKBARCREATED, OnRestartExplorer)
 END_MESSAGE_MAP()
 
 
@@ -117,6 +119,8 @@ BOOL CBoysGirlDlg::OnInitDialog()
 	// TODO: Add extra initialization here
 
 	theApp.m_pFloatDlg->ShowTopMost();
+
+	AddNotifyIcon();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -179,19 +183,26 @@ HCURSOR CBoysGirlDlg::OnQueryDragIcon()
 void CBoysGirlDlg::OnClose()
 {
 	if (CanExit())
+	{
 		CDialogEx::OnClose();
+	}
 }
 
 void CBoysGirlDlg::OnOK()
 {
 	if (CanExit())
+	{
 		CDialogEx::OnOK();
+	}
 }
 
 void CBoysGirlDlg::OnCancel()
 {
 	if (CanExit())
+	{
+		DelNotifyIcon();
 		CDialogEx::OnCancel();
+	}
 }
 
 BOOL CBoysGirlDlg::CanExit()
@@ -208,3 +219,47 @@ BOOL CBoysGirlDlg::CanExit()
 	return TRUE;
 }
 
+LRESULT CBoysGirlDlg::OnNotifyMsg(WPARAM wParam, LPARAM lParam)
+{
+	//wParam接收的是图标的ID，而lParam接收的是鼠标的行为   
+	if (wParam != IDR_MAINFRAME)
+	{
+		return TRUE;
+	}
+	switch (lParam)
+	{
+	case WM_RBUTTONUP: 
+	{
+#define IDMENU_CONFIG 1000
+		CMenu menu = {};
+		POINT pt = { 0 };
+		::GetCursorPos(&pt);
+		menu.CreatePopupMenu();
+		menu.AppendMenu(MF_STRING, IDMENU_CONFIG, TEXT("配置"));
+		menu.AppendMenu(MF_STRING, WM_DESTROY, TEXT("退出"));
+		menu.TrackPopupMenu(TPM_LEFTALIGN, pt.x, pt.y, this);
+		menu.Detach();
+		menu.DestroyMenu();
+	}
+	break;
+	case WM_LBUTTONDBLCLK:
+	{
+		if (IsWindowVisible())
+		{
+			ShowWindow(SW_HIDE);
+		}
+		else
+		{
+			ShowWindow(SW_SHOW);
+		}
+	}
+	break;
+	}
+	return FALSE;
+}
+
+LRESULT CBoysGirlDlg::OnRestartExplorer(WPARAM wParam, LPARAM lParam)
+{
+	AddNotifyIcon();
+	return TRUE;
+}
