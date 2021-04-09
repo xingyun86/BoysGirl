@@ -1,0 +1,17 @@
+REGEDIT
+; This .REG file may be used by your SETUP program.
+;   If a SETUP program is not available, the entries below will be
+;   registered in your InitInstance automatically with a call to
+;   CWinApp::RegisterShellFileTypes and COleObjectFactory::UpdateRegistryAll.
+
+
+HKEY_CLASSES_ROOT\BoysGirl.Application = BoysGirl Application
+
+
+HKEY_CLASSES_ROOT\BoysGirl.Application\CLSID = {4a56caea-6378-42b0-9031-812b950d715d}
+
+HKEY_CLASSES_ROOT\CLSID\{4a56caea-6378-42b0-9031-812b950d715d} = BoysGirl Application
+HKEY_CLASSES_ROOT\CLSID\{4a56caea-6378-42b0-9031-812b950d715d}\ProgId = BoysGirl.Application
+
+
+HKEY_CLASSES_ROOT\CLSID\{4a56caea-6378-42b0-9031-812b950d715d}\LocalServer32 = BoysGirl.EXE

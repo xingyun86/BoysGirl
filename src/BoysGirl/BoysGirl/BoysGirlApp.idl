@@ -1,0 +1,29 @@
+// BoysGirl.idl : type library source for BoysGirl.exe
+
+// This file will be processed by the MIDL compiler to produce the
+// type library (BoysGirl.tlb).
+
+[ uuid(ca2ae745-c001-4826-8650-664a2cd96788), version(1.0) ]
+library BoysGirl
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+	//  Primary dispatch interface for CBoysGirlDoc
+
+	[ uuid(9b0dfc5a-ec68-4a68-8474-703071e47634) ]
+	dispinterface IBoysGirl
+	{
+		properties:
+
+		methods:
+	};
+
+	//  Class information for CBoysGirlDoc
+
+	[ uuid(4a56caea-6378-42b0-9031-812b950d715d) ]
+	coclass BoysGirl
+	{
+		[default] dispinterface IBoysGirl;
+	};
+};
