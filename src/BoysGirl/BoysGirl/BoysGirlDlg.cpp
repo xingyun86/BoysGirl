@@ -74,7 +74,9 @@ BEGIN_MESSAGE_MAP(CBoysGirlDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_WM_NCHITTEST()
+	ON_WM_NCMOUSEMOVE()
 	ON_WM_NCLBUTTONDOWN()
+	ON_COMMAND(RESTYPEID::IDMENU_CONFIG, OnMenuConfig)
 	ON_MESSAGE(WM_USER_NOTIFYICON, OnNotifyMsg)
 	ON_REGISTERED_MESSAGE(WMEX_TASKBARCREATED, OnRestartExplorer)
 END_MESSAGE_MAP()
@@ -261,6 +263,107 @@ BOOL CBoysGirlDlg::CanExit()
 	return TRUE;
 }
 
+LRESULT CBoysGirlDlg::OnNcHitTest(CPoint point)
+{
+	// TODO: Add your message handler code here and/or call default
+	UINT uHitTest = 0;
+	CRect rect = {};
+	GetWindowRect(&rect);
+	CRect rectNoBorder = rect;
+	rectNoBorder.DeflateRect(BORDER_SIZE, BORDER_SIZE, -BORDER_SIZE, -BORDER_SIZE);
+	rectNoBorder.NormalizeRect();
+	if (point.x <= rect.left + BORDER_SIZE && point.y <= rect.top + BORDER_SIZE)
+	{
+		uHitTest = HTTOPLEFT;
+	}
+	else if (point.x >= rect.right - BORDER_SIZE && point.y <= rect.top + BORDER_SIZE)
+	{
+		uHitTest = HTTOPRIGHT;
+	}
+	else if (point.x <= rect.left + BORDER_SIZE && point.y >= rect.bottom - BORDER_SIZE)
+	{
+		uHitTest = HTBOTTOMLEFT;
+	}
+	else if (point.x >= rect.right - BORDER_SIZE && point.y >= rect.bottom - BORDER_SIZE)
+	{
+		uHitTest = HTBOTTOMRIGHT;
+	}
+	else if (point.x <= rect.left + BORDER_SIZE)
+	{
+		uHitTest = HTLEFT;
+	}
+	else if (point.x >= rect.right - BORDER_SIZE)
+	{
+		uHitTest = HTRIGHT;
+	}
+	else if (point.y <= rect.top + BORDER_SIZE)
+	{
+		uHitTest = HTTOP;
+	}
+	else if (point.y >= rect.bottom - BORDER_SIZE)
+	{
+		uHitTest = HTBOTTOM;
+	}
+	else if (!rectNoBorder.IsRectEmpty())
+	{
+		if (point.y > 0 && point.y < (rect.top + m_titleBarHeight))
+		{
+			uHitTest = HTCAPTION;
+		}
+		else
+		{
+			uHitTest = (decltype(uHitTest))CWnd::OnNcHitTest(point);
+		}
+		//LRESULT lRet = CWnd::OnNcHitTest(point);
+		//lRet = (lRet == HTCLIENT) ? HTCAPTION : lRet;
+		//return lRet;
+	}
+	else
+	{
+		uHitTest = (decltype(uHitTest))CWnd::OnNcHitTest(point);
+	}
+
+	return (LRESULT)uHitTest;
+	//return CDialogEx::OnNcHitTest(point);
+}
+
+
+void CBoysGirlDlg::OnNcMouseMove(UINT uHitTest, CPoint point)
+{
+	// TODO: Add your message handler code here and/or call default
+	auto itMsgCursor = m_mapMsgCursor.find(uHitTest);
+	if (itMsgCursor != m_mapMsgCursor.end())
+	{
+		if (itMsgCursor->second.pCursor != NULL)
+		{
+			SetCursor(LoadCursor(NULL, itMsgCursor->second.pCursor));
+		}
+	}
+	CDialogEx::OnNcMouseMove(uHitTest, point);
+}
+
+void CBoysGirlDlg::OnNcLButtonDown(UINT uHitTest, CPoint point)
+{
+	// TODO: Add your message handler code here and/or call default
+	auto itMsgCursor = m_mapMsgCursor.find(uHitTest);
+	if (itMsgCursor != m_mapMsgCursor.end())
+	{
+		if (itMsgCursor->second.pCursor != NULL)
+		{
+			SetCursor(LoadCursor(NULL, itMsgCursor->second.pCursor));
+		}
+		SystemParametersInfo(SPI_SETDRAGFULLWINDOWS, FALSE, NULL, 0);
+		SendMessage(WM_SYSCOMMAND, itMsgCursor->second.uMsg, MAKELPARAM(point.x, point.y));
+		SystemParametersInfo(SPI_SETDRAGFULLWINDOWS, TRUE, NULL, 0);
+		NotifyUpdate();
+	}
+	
+	CDialogEx::OnNcLButtonDown(uHitTest, point);
+}
+void CBoysGirlDlg::OnMenuConfig(void)
+{
+	AfxMessageBox(TEXT("配置"));
+}
 LRESULT CBoysGirlDlg::OnNotifyMsg(WPARAM wParam, LPARAM lParam)
 {
 	//wParam接收的是图标的ID，而lParam接收的是鼠标的行为   
@@ -270,9 +373,8 @@ LRESULT CBoysGirlDlg::OnNotifyMsg(WPARAM wParam, LPARAM lParam)
 	}
 	switch (lParam)
 	{
-	case WM_RBUTTONUP: 
+	case WM_RBUTTONUP:
 	{
-#define IDMENU_CONFIG 1000
 		CMenu menu = {};
 		POINT pt = { 0 };
 		::GetCursorPos(&pt);
@@ -305,93 +407,3 @@ LRESULT CBoysGirlDlg::OnRestartExplorer(WPARAM wParam, LPARAM lParam)
 	AddNotifyIcon();
 	return TRUE;
 }
-
-LRESULT CBoysGirlDlg::OnNcHitTest(CPoint point)
-{
-	// TODO: Add your message handler code here and/or call default
-	UINT uHitTest = 0;
-	CRect rect = {};
-	GetWindowRect(&rect);
-	CRect rectNoBorder = rect;
-	rectNoBorder.DeflateRect(CROSS_BORDER_SIZE, CROSS_BORDER_SIZE, -CROSS_BORDER_SIZE, -CROSS_BORDER_SIZE);
-	rectNoBorder.NormalizeRect();
-	if (point.x <= rect.left + BORDER_SIZE)
-	{
-		uHitTest = HTLEFT;
-	}
-	else if (point.x >= rect.right - BORDER_SIZE)
-	{
-		uHitTest = HTRIGHT;
-	}
-	else if (point.y <= rect.top + BORDER_SIZE)
-	{
-		uHitTest = HTTOP;
-	}
-	else if (point.y >= rect.bottom - BORDER_SIZE)
-	{
-		uHitTest = HTBOTTOM;
-	}
-	else if (point.x <= rect.left + CROSS_BORDER_SIZE && point.y <= rect.top + CROSS_BORDER_SIZE)
-	{
-		uHitTest = HTTOPLEFT;
-	}
-	else if (point.x >= rect.right - CROSS_BORDER_SIZE && point.y <= rect.top + CROSS_BORDER_SIZE)
-	{
-		uHitTest = HTTOPRIGHT;
-	}
-	else if (point.x <= rect.left + CROSS_BORDER_SIZE && point.y >= rect.bottom - CROSS_BORDER_SIZE)
-	{
-		uHitTest = HTBOTTOMLEFT;
-	}
-	else if (point.x >= rect.right - CROSS_BORDER_SIZE && point.y >= rect.bottom - CROSS_BORDER_SIZE)
-	{
-		uHitTest = HTBOTTOMRIGHT;
-	}
-	else if (!rectNoBorder.IsRectEmpty())
-	{
-		if (point.y > 0 && point.y < (rect.top + m_titleBarHeight))
-		{
-			uHitTest = HTCAPTION;
-		}
-		else
-		{
-			uHitTest = (decltype(uHitTest))CWnd::OnNcHitTest(point);
-		}
-		//LRESULT lRet = CWnd::OnNcHitTest(point);
-		//lRet = (lRet == HTCLIENT) ? HTCAPTION : lRet;
-		//return lRet;
-	}
-	else
-	{
-		uHitTest = (decltype(uHitTest))CWnd::OnNcHitTest(point);
-	}
-	auto itMsgCursor = m_mapMsgCursor.find(uHitTest);
-	if (itMsgCursor != m_mapMsgCursor.end())
-	{
-		if (itMsgCursor->second.pCursor != NULL)
-		{
-			SetCursor(LoadCursor(NULL, itMsgCursor->second.pCursor));
-		}
-	}
-	return (LRESULT)uHitTest;
-	//return CDialogEx::OnNcHitTest(point);
-}
-
-
-void CBoysGirlDlg::OnNcLButtonDown(UINT uHitTest, CPoint point)
-{
-	// TODO: Add your message handler code here and/or call default
-	auto itMsgCursor = m_mapMsgCursor.find(uHitTest);
-	if (itMsgCursor != m_mapMsgCursor.end())
-	{
-		if (itMsgCursor->second.pCursor != NULL)
-		{
-			SetCursor(LoadCursor(NULL, itMsgCursor->second.pCursor));
-		}
-		SendMessage(WM_SYSCOMMAND, itMsgCursor->second.uMsg, MAKELPARAM(point.x, point.y));
-		NotifyUpdate();
-	}
-	
-	CDialogEx::OnNcLButtonDown(uHitTest, point);
-}
-

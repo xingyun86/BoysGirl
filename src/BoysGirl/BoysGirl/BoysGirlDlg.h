@@ -7,7 +7,10 @@
 class CBoysGirlDlgAutoProxy;
 
 const UINT WMEX_TASKBARCREATED = ::RegisterWindowMessage(TEXT("TaskbarCreated"));
-
+typedef enum RESTYPEID {
+	ID_NULLPTR = 1000,
+	IDMENU_CONFIG,
+}RESTYPEID;
 // CBoysGirlDlg dialog
 class CBoysGirlDlg : public CDialogEx
 {
@@ -44,9 +47,11 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void OnClose();
 	afx_msg LRESULT OnNcHitTest(CPoint point);
+	afx_msg void OnNcMouseMove(UINT uHitTest, CPoint point);
 	afx_msg void OnNcLButtonDown(UINT uHitTest, CPoint point);
 	afx_msg LRESULT OnNotifyMsg(WPARAM wParam, LPARAM lParam); 
 	afx_msg LRESULT OnRestartExplorer(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnMenuConfig(void);
 	DECLARE_MESSAGE_MAP()
 private:
 	void Init();
@@ -68,8 +73,7 @@ private:
 		{HTCAPTION, {SC_MOVE | WMSZ_TOPLEFT, NULL}},
 	};
 private:
-	int BORDER_SIZE = 5;
-	int CROSS_BORDER_SIZE = 10;
+	int BORDER_SIZE = 6;
 	int m_titleBarHeight = 30;
 private:
 	NOTIFYICONDATA m_notifyIconData = { 0 };
@@ -156,6 +160,9 @@ private:
 		graphicsMem.FillRectangle(&borderBrush, rc.right - BORDER_SIZE, rc.top, BORDER_SIZE, rc.Height());
 		//»æÖÆÏÂ±ß¿ò
 		graphicsMem.FillRectangle(&borderBrush, rc.left, rc.bottom - BORDER_SIZE, rc.Width(), BORDER_SIZE);
+
+		Gdiplus::SolidBrush maxBoxBrush(Gdiplus::Color(100, 20, 20, 20));
+		graphicsMem.FillRectangle(&maxBoxBrush, rc.right - BORDER_SIZE - 10, rc.top + BORDER_SIZE, 10, 10);
 
 		if ((m_iconBitmapHandleMap.find(m_hIcon) != m_iconBitmapHandleMap.end()) 
 			&& (m_iconBitmapHandleMap.at(m_hIcon).pBitmapArgb != nullptr))
