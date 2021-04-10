@@ -56,18 +56,11 @@ IMPLEMENT_DYNAMIC(CBoysGirlDlg, CDialogEx);
 CBoysGirlDlg::CBoysGirlDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_BOYSGIRL_DIALOG, pParent)
 {
-	EnableActiveAccessibility();
-	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
-	m_pAutoProxy = nullptr;
 }
 
 CBoysGirlDlg::~CBoysGirlDlg()
 {
-	// If there is an automation proxy for this dialog, set
-	//  its back pointer to this dialog to null, so it knows
-	//  the dialog has been deleted.
-	if (m_pAutoProxy != nullptr)
-		m_pAutoProxy->m_pDialog = nullptr;
+
 }
 
 void CBoysGirlDlg::DoDataExchange(CDataExchange* pDX)
@@ -88,7 +81,44 @@ END_MESSAGE_MAP()
 
 
 // CBoysGirlDlg message handlers
+void CBoysGirlDlg::Init()
+{
+	EnableActiveAccessibility();
+	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	m_pAutoProxy = nullptr;
+	{
+		IconBitmapHandle iconBitmapHandle = { 0 };
+		GdiplusBitmapFromHICON(iconBitmapHandle, m_hIcon);
+	}
 
+	AddNotifyIcon();
+}
+void CBoysGirlDlg::Exit()
+{
+	// If there is an automation proxy for this dialog, set
+	//  its back pointer to this dialog to null, so it knows
+	//  the dialog has been deleted.
+	if (m_pAutoProxy != nullptr)
+	{
+		m_pAutoProxy->m_pDialog = nullptr;
+	}
+	DelNotifyIcon();
+	if (!m_iconBitmapHandleMap.empty())
+	{
+		for (auto& it : m_iconBitmapHandleMap)
+		{
+			if (it.second.pBitmapArgb != nullptr)
+			{
+				delete it.second.pBitmapArgb;
+			}
+			if (it.second.pBitmapIcon != nullptr)
+			{
+				delete it.second.pBitmapIcon;
+			}
+		}
+		m_iconBitmapHandleMap.clear();
+	}
+}
 BOOL CBoysGirlDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
@@ -113,20 +143,19 @@ BOOL CBoysGirlDlg::OnInitDialog()
 		}
 	}
 
+	Init();
+
 	// Set the icon for this dialog.  The framework does this automatically
 	//  when the application's main window is not a dialog
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
-	
+
 	SetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE, GetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE) & (~WS_CAPTION) & (~WS_SIZEBOX) & (~WS_THICKFRAME));
 	SetWindowLongPtr(this->GetSafeHwnd(), GWL_EXSTYLE, GetWindowLongPtr(this->GetSafeHwnd(), GWL_EXSTYLE));
 	SetWindowPos(&CWnd::wndNoTopMost, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
-
 	theApp.m_pFloatDlg->ShowTopMost();
-
-	AddNotifyIcon();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -227,7 +256,7 @@ BOOL CBoysGirlDlg::CanExit()
 		return FALSE;
 	}
 
-	DelNotifyIcon();
+	Exit();
 
 	return TRUE;
 }
@@ -280,6 +309,7 @@ LRESULT CBoysGirlDlg::OnRestartExplorer(WPARAM wParam, LPARAM lParam)
 LRESULT CBoysGirlDlg::OnNcHitTest(CPoint point)
 {
 	// TODO: Add your message handler code here and/or call default
+	UINT uHitTest = 0;
 	CRect rect = {};
 	GetWindowRect(&rect);
 	CRect rectNoBorder = rect;
@@ -287,45 +317,45 @@ LRESULT CBoysGirlDlg::OnNcHitTest(CPoint point)
 	rectNoBorder.NormalizeRect();
 	if (point.x <= rect.left + BORDER_SIZE)
 	{
-		return HTLEFT;
+		uHitTest = HTLEFT;
 	}
 	else if (point.x >= rect.right - BORDER_SIZE)
 	{
-		return HTRIGHT;
+		uHitTest = HTRIGHT;
 	}
 	else if (point.y <= rect.top + BORDER_SIZE)
 	{
-		return HTTOP;
+		uHitTest = HTTOP;
 	}
 	else if (point.y >= rect.bottom - BORDER_SIZE)
 	{
-		return HTBOTTOM;
+		uHitTest = HTBOTTOM;
 	}
 	else if (point.x <= rect.left + CROSS_BORDER_SIZE && point.y <= rect.top + CROSS_BORDER_SIZE)
 	{
-		return HTTOPLEFT;
+		uHitTest = HTTOPLEFT;
 	}
 	else if (point.x >= rect.right - CROSS_BORDER_SIZE && point.y <= rect.top + CROSS_BORDER_SIZE)
 	{
-		return HTTOPRIGHT;
+		uHitTest = HTTOPRIGHT;
 	}
 	else if (point.x <= rect.left + CROSS_BORDER_SIZE && point.y >= rect.bottom - CROSS_BORDER_SIZE)
 	{
-		return HTBOTTOMLEFT;
+		uHitTest = HTBOTTOMLEFT;
 	}
 	else if (point.x >= rect.right - CROSS_BORDER_SIZE && point.y >= rect.bottom - CROSS_BORDER_SIZE)
 	{
-		return HTBOTTOMRIGHT;
+		uHitTest = HTBOTTOMRIGHT;
 	}
 	else if (!rectNoBorder.IsRectEmpty())
 	{
 		if (point.y > 0 && point.y < (rect.top + m_titleBarHeight))
 		{
-			return HTCAPTION;
+			uHitTest = HTCAPTION;
 		}
 		else
 		{
-			return CWnd::OnNcHitTest(point);
+			uHitTest = (decltype(uHitTest))CWnd::OnNcHitTest(point);
 		}
 		//LRESULT lRet = CWnd::OnNcHitTest(point);
 		//lRet = (lRet == HTCLIENT) ? HTCAPTION : lRet;
@@ -333,17 +363,25 @@ LRESULT CBoysGirlDlg::OnNcHitTest(CPoint point)
 	}
 	else
 	{
-		return CWnd::OnNcHitTest(point);
+		uHitTest = (decltype(uHitTest))CWnd::OnNcHitTest(point);
 	}
-	return FALSE;
+	auto itMsgCursor = m_mapMsgCursor.find(uHitTest);
+	if (itMsgCursor != m_mapMsgCursor.end())
+	{
+		if (itMsgCursor->second.pCursor != NULL)
+		{
+			SetCursor(LoadCursor(NULL, itMsgCursor->second.pCursor));
+		}
+	}
+	return (LRESULT)uHitTest;
 	//return CDialogEx::OnNcHitTest(point);
 }
 
 
-void CBoysGirlDlg::OnNcLButtonDown(UINT nHitTest, CPoint point)
+void CBoysGirlDlg::OnNcLButtonDown(UINT uHitTest, CPoint point)
 {
 	// TODO: Add your message handler code here and/or call default
-	auto itMsgCursor = m_mapMsgCursor.find(nHitTest);
+	auto itMsgCursor = m_mapMsgCursor.find(uHitTest);
 	if (itMsgCursor != m_mapMsgCursor.end())
 	{
 		if (itMsgCursor->second.pCursor != NULL)
@@ -354,6 +392,6 @@ void CBoysGirlDlg::OnNcLButtonDown(UINT nHitTest, CPoint point)
 		NotifyUpdate();
 	}
 	
-	CDialogEx::OnNcLButtonDown(nHitTest, point);
+	CDialogEx::OnNcLButtonDown(uHitTest, point);
 }
 

@@ -44,10 +44,13 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void OnClose();
 	afx_msg LRESULT OnNcHitTest(CPoint point);
-	afx_msg void OnNcLButtonDown(UINT nHitTest, CPoint point);
+	afx_msg void OnNcLButtonDown(UINT uHitTest, CPoint point);
 	afx_msg LRESULT OnNotifyMsg(WPARAM wParam, LPARAM lParam); 
 	afx_msg LRESULT OnRestartExplorer(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
+private:
+	void Init();
+	void Exit();
 private:
 	typedef struct MsgCursor {
 		UINT uMsg;
@@ -90,6 +93,39 @@ private:
 		Shell_NotifyIcon(NIM_DELETE, &m_notifyIconData);
 	}
 private:
+	typedef struct IconBitmapHandle {
+		Gdiplus::Bitmap* pBitmapArgb;
+		Gdiplus::Bitmap* pBitmapIcon;
+	}IconBitmapHandle;
+	std::unordered_map<HICON, IconBitmapHandle> m_iconBitmapHandleMap = {};
+private:
+	IconBitmapHandle& GdiplusBitmapFromHICON(IconBitmapHandle & iconBitmapHandle, HICON hIcon)
+	{
+		iconBitmapHandle.pBitmapArgb = nullptr;
+		iconBitmapHandle.pBitmapIcon = nullptr;
+		auto it = m_iconBitmapHandleMap.find(hIcon);
+		if (it == m_iconBitmapHandleMap.end())
+		{
+			ICONINFO iconInfo = { 0 };
+			if (GetIconInfo(hIcon, &iconInfo) && iconInfo.fIcon == TRUE)
+			{
+				iconBitmapHandle.pBitmapIcon = Gdiplus::Bitmap::FromHBITMAP(iconInfo.hbmColor, NULL);
+				if (iconBitmapHandle.pBitmapIcon != nullptr)
+				{
+					Gdiplus::BitmapData bitmapData = {};
+					Gdiplus::Rect rcImage(0, 0, iconBitmapHandle.pBitmapIcon->GetWidth(), iconBitmapHandle.pBitmapIcon->GetHeight());
+					iconBitmapHandle.pBitmapIcon->LockBits(&rcImage, Gdiplus::ImageLockModeRead, iconBitmapHandle.pBitmapIcon->GetPixelFormat(), &bitmapData);
+					iconBitmapHandle.pBitmapArgb = new Gdiplus::Bitmap(bitmapData.Width, bitmapData.Height, bitmapData.Stride, PixelFormat32bppARGB, (BYTE*)bitmapData.Scan0);
+					if (iconBitmapHandle.pBitmapArgb != nullptr)
+					{
+						m_iconBitmapHandleMap.emplace(m_hIcon, iconBitmapHandle);
+					}
+					iconBitmapHandle.pBitmapIcon->UnlockBits(&bitmapData);
+				}
+			}
+		}
+		return iconBitmapHandle;
+	}
 	void MemoryDoubleBuffer(HDC hDC)
 	{
 		CRect rc = {};
@@ -97,8 +133,8 @@ private:
 		Gdiplus::Bitmap bitmapMem(rc.Width(), rc.Height());
 		Gdiplus::Graphics graphicsMem(&bitmapMem);
 		
-		graphicsMem.Clear(Gdiplus::Color(255, 255, 255));
-		graphicsMem.SetSmoothingMode(Gdiplus::SmoothingModeNone);
+		graphicsMem.Clear(Gdiplus::Color(0, 255, 255, 255)); 
+		graphicsMem.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
 
 		PaintTitleBar(graphicsMem, rc);
 	
@@ -121,9 +157,14 @@ private:
 		//»æÖÆÏÂ±ß¿ò
 		graphicsMem.FillRectangle(&borderBrush, rc.left, rc.bottom - BORDER_SIZE, rc.Width(), BORDER_SIZE);
 
+		if ((m_iconBitmapHandleMap.find(m_hIcon) != m_iconBitmapHandleMap.end()) 
+			&& (m_iconBitmapHandleMap.at(m_hIcon).pBitmapArgb != nullptr))
+		{
+			graphicsMem.DrawImage(m_iconBitmapHandleMap.at(m_hIcon).pBitmapArgb, 0, 0, m_titleBarHeight, m_titleBarHeight);
+		}
 		Gdiplus::FontFamily  fontFamily(L"Times New Roman");
-		Gdiplus::Font        font(&fontFamily, 20, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
-		Gdiplus::PointF      pointF(0.0f, 10.0f);
+		Gdiplus::Font        font(&fontFamily, 28, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
+		Gdiplus::PointF      pointF(m_titleBarHeight +1.0f, 0.0f);
 		Gdiplus::SolidBrush  textBrush(Gdiplus::Color(255, 0, 0, 255));
 		graphicsMem.DrawString(L"TitleBar", -1, &font, pointF, &textBrush);
 	}
