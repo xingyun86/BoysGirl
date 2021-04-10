@@ -25,6 +25,7 @@ protected:
 private:
 	POINT m_ptPos = { 0,0 };
 	bool m_isDlgInited = false;
+
 public:
 	void ShowTopMost();
 	void LoadPosition();

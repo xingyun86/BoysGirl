@@ -32,8 +32,11 @@
 #include <afxsock.h>            // MFC socket extensions
 
 
+#include <gdiplus.h>
+#pragma comment(lib, "gdiplus")
 
 #include <string>
+#include <unordered_map>
 
 #define WM_USER_NOTIFYICON WM_USER + WM_NOTIFY + 1
 

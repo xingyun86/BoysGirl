@@ -115,6 +115,10 @@ BOOL CBoysGirlApp::InitInstance()
 		if (cmdInfo.m_nShellCommand == CCommandLineInfo::AppRegister)
 			return FALSE;
 	}
+	ULONG_PTR gdiplusToken = NULL;
+	Gdiplus::GdiplusStartupInput gdiplusStartupInput = { 0 };
+	Gdiplus::GdiplusStartupOutput gdiplusStartupOutput = { 0 };
+	Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, &gdiplusStartupOutput);
 
 	m_pMainDlg = std::make_shared<CBoysGirlDlg>();
 	m_pFloatDlg = std::make_shared<CFloatDlg>();
@@ -138,6 +142,8 @@ BOOL CBoysGirlApp::InitInstance()
 	}
 
 	m_pFloatDlg->DestroyWindow();
+	
+	Gdiplus::GdiplusShutdown(gdiplusToken);
 
 	// Delete the shell manager created above.
 	if (pShellManager != nullptr)

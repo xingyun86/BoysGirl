@@ -80,6 +80,8 @@ BEGIN_MESSAGE_MAP(CBoysGirlDlg, CDialogEx)
 	ON_WM_CLOSE()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_WM_NCHITTEST()
+	ON_WM_NCLBUTTONDOWN()
 	ON_MESSAGE(WM_USER_NOTIFYICON, OnNotifyMsg)
 	ON_REGISTERED_MESSAGE(WMEX_TASKBARCREATED, OnRestartExplorer)
 END_MESSAGE_MAP()
@@ -117,6 +119,10 @@ BOOL CBoysGirlDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
+	
+	SetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE, GetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE) & (~WS_CAPTION) & (~WS_SIZEBOX) & (~WS_THICKFRAME));
+	SetWindowLongPtr(this->GetSafeHwnd(), GWL_EXSTYLE, GetWindowLongPtr(this->GetSafeHwnd(), GWL_EXSTYLE));
+	SetWindowPos(&CWnd::wndNoTopMost, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
 
 	theApp.m_pFloatDlg->ShowTopMost();
 
@@ -134,6 +140,7 @@ void CBoysGirlDlg::OnSysCommand(UINT nID, LPARAM lParam)
 	}
 	else
 	{
+		NotifyUpdate();
 		CDialogEx::OnSysCommand(nID, lParam);
 	}
 }
@@ -163,6 +170,11 @@ void CBoysGirlDlg::OnPaint()
 	}
 	else
 	{
+		CPaintDC dc(this);
+		
+		MemoryDoubleBuffer(dc.m_hDC);
+
+		ReleaseDC(&dc);
 		CDialogEx::OnPaint();
 	}
 }
@@ -200,7 +212,6 @@ void CBoysGirlDlg::OnCancel()
 {
 	if (CanExit())
 	{
-		DelNotifyIcon();
 		CDialogEx::OnCancel();
 	}
 }
@@ -215,6 +226,8 @@ BOOL CBoysGirlDlg::CanExit()
 		ShowWindow(SW_HIDE);
 		return FALSE;
 	}
+
+	DelNotifyIcon();
 
 	return TRUE;
 }
@@ -263,3 +276,84 @@ LRESULT CBoysGirlDlg::OnRestartExplorer(WPARAM wParam, LPARAM lParam)
 	AddNotifyIcon();
 	return TRUE;
 }
+
+LRESULT CBoysGirlDlg::OnNcHitTest(CPoint point)
+{
+	// TODO: Add your message handler code here and/or call default
+	CRect rect = {};
+	GetWindowRect(&rect);
+	CRect rectNoBorder = rect;
+	rectNoBorder.DeflateRect(CROSS_BORDER_SIZE, CROSS_BORDER_SIZE, -CROSS_BORDER_SIZE, -CROSS_BORDER_SIZE);
+	rectNoBorder.NormalizeRect();
+	if (point.x <= rect.left + BORDER_SIZE)
+	{
+		return HTLEFT;
+	}
+	else if (point.x >= rect.right - BORDER_SIZE)
+	{
+		return HTRIGHT;
+	}
+	else if (point.y <= rect.top + BORDER_SIZE)
+	{
+		return HTTOP;
+	}
+	else if (point.y >= rect.bottom - BORDER_SIZE)
+	{
+		return HTBOTTOM;
+	}
+	else if (point.x <= rect.left + CROSS_BORDER_SIZE && point.y <= rect.top + CROSS_BORDER_SIZE)
+	{
+		return HTTOPLEFT;
+	}
+	else if (point.x >= rect.right - CROSS_BORDER_SIZE && point.y <= rect.top + CROSS_BORDER_SIZE)
+	{
+		return HTTOPRIGHT;
+	}
+	else if (point.x <= rect.left + CROSS_BORDER_SIZE && point.y >= rect.bottom - CROSS_BORDER_SIZE)
+	{
+		return HTBOTTOMLEFT;
+	}
+	else if (point.x >= rect.right - CROSS_BORDER_SIZE && point.y >= rect.bottom - CROSS_BORDER_SIZE)
+	{
+		return HTBOTTOMRIGHT;
+	}
+	else if (!rectNoBorder.IsRectEmpty())
+	{
+		if (point.y > 0 && point.y < (rect.top + m_titleBarHeight))
+		{
+			return HTCAPTION;
+		}
+		else
+		{
+			return CWnd::OnNcHitTest(point);
+		}
+		//LRESULT lRet = CWnd::OnNcHitTest(point);
+		//lRet = (lRet == HTCLIENT) ? HTCAPTION : lRet;
+		//return lRet;
+	}
+	else
+	{
+		return CWnd::OnNcHitTest(point);
+	}
+	return FALSE;
+	//return CDialogEx::OnNcHitTest(point);
+}
+
+
+void CBoysGirlDlg::OnNcLButtonDown(UINT nHitTest, CPoint point)
+{
+	// TODO: Add your message handler code here and/or call default
+	auto itMsgCursor = m_mapMsgCursor.find(nHitTest);
+	if (itMsgCursor != m_mapMsgCursor.end())
+	{
+		if (itMsgCursor->second.pCursor != NULL)
+		{
+			SetCursor(LoadCursor(NULL, itMsgCursor->second.pCursor));
+		}
+		SendMessage(WM_SYSCOMMAND, itMsgCursor->second.uMsg, MAKELPARAM(point.x, point.y));
+		NotifyUpdate();
+	}
+	
+	CDialogEx::OnNcLButtonDown(nHitTest, point);
+}
+

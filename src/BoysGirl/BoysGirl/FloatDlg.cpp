@@ -44,9 +44,7 @@ BOOL CFloatDlg::OnInitDialog()
 
 	GetDlgItem(IDOK)->ShowWindow(SW_HIDE);
 	GetDlgItem(IDCANCEL)->ShowWindow(SW_HIDE);
-	ShowWindow(SW_HIDE);
 	SetWindowPos(&CWnd::wndNoTopMost, 0, 0, 64, 64, SWP_NOZORDER | SWP_NOMOVE | SWP_FRAMECHANGED);
-	ShowWindow(SW_SHOW);
 	m_isDlgInited = true;
 
 	return FALSE;
