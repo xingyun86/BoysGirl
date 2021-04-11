@@ -66,6 +66,8 @@ CBoysGirlDlg::~CBoysGirlDlg()
 void CBoysGirlDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDOK, m_btnOk);
+	DDX_Control(pDX, IDCANCEL, m_btnCancel);
 }
 
 BEGIN_MESSAGE_MAP(CBoysGirlDlg, CDialogEx)
@@ -80,6 +82,7 @@ BEGIN_MESSAGE_MAP(CBoysGirlDlg, CDialogEx)
 	ON_COMMAND(RESTYPEID::IDMENU_CONFIG, OnMenuConfig)
 	ON_MESSAGE(WM_USER_NOTIFYICON, OnNotifyMsg)
 	ON_REGISTERED_MESSAGE(WMEX_TASKBARCREATED, OnRestartExplorer)
+	ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
 
@@ -425,4 +428,34 @@ BOOL CBoysGirlDlg::OnEraseBkgnd(CDC* pDC)
 	// TODO: Add your message handler code here and/or call default
 
 	return TRUE;// CDialogEx::OnEraseBkgnd(pDC);
+}
+
+
+HBRUSH CBoysGirlDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	// TODO:  Change any attributes of the DC here
+	switch (nCtlColor)
+	{
+	case CTLCOLOR_STATIC:
+	{
+		pDC->SetBkMode(TRANSPARENT);
+		hbr = (HBRUSH) ::GetStockObject(HOLLOW_BRUSH);
+	}
+		break;
+	}
+	switch (pWnd->GetDlgCtrlID())
+	{
+	case IDOK:
+	case IDCANCEL:
+	case IDC_STATIC:
+	{
+		pDC->SetBkMode(TRANSPARENT);
+		hbr = (HBRUSH) ::GetStockObject(HOLLOW_BRUSH);
+	}
+	break;
+	}
+	// TODO:  Return a different brush if the default is not desired
+	return hbr;
 }

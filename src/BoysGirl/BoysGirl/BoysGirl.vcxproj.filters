@@ -39,6 +39,9 @@
     <ClInclude Include="FloatDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CustomButton.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BoysGirlApp.cpp">
@@ -54,6 +57,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FloatDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CustomButton.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

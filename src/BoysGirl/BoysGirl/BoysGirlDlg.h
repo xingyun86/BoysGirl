@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <CustomButton.h>
+
 class CBoysGirlDlgAutoProxy;
 
 const UINT WMEX_TASKBARCREATED = ::RegisterWindowMessage(TEXT("TaskbarCreated"));
@@ -48,6 +50,7 @@ protected:
 	afx_msg void OnClose();
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 	afx_msg LRESULT OnNcHitTest(CPoint point);
 	afx_msg void OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS* lpncsp);
@@ -143,12 +146,16 @@ private:
 		graphicsMem.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
 		
 		PaintBackground(graphicsMem, rc);
-
 		PaintTitleBar(graphicsMem, rc);
-	
+
 		Gdiplus::Graphics graphics(hDC);
 		Gdiplus::CachedBitmap cachedBmp(&bitmapMem, &graphics);
 		graphics.DrawCachedBitmap(&cachedBmp, 0, 0);
+
+		Gdiplus::Image* btnokImg = Gdiplus::Image::FromFile(this->btnokImg.c_str());
+		Gdiplus::Graphics g(GetDlgItem(IDOK)->GetWindowDC()->m_hDC);
+		g.DrawImage(btnokImg, 0, 0);
+		delete btnokImg;
 	}
 	void PaintBackground(Gdiplus::Graphics& graphicsMem, const CRect& rc)
 	{
@@ -202,6 +209,7 @@ private:
 	}
 public:
 	std::wstring bgImg = AToW(GetAppDir() + "\\res\\bg.png");
+	std::wstring btnokImg = AToW(GetAppDir() + "\\res\\btnok.png");
 public:
 	void ShowOrHideWindow()
 	{
@@ -215,4 +223,7 @@ public:
 			BringWindowToTop();
 		}
 	}
+protected:
+	CCustomButton m_btnOk;
+	CCustomButton m_btnCancel;
 };
