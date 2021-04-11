@@ -69,6 +69,116 @@ __inline static std::wstring format_string(const wchar_t* format, Args... args) 
     }
     return buffer;
 }
+//通用版将wstring转化为string
+__inline std::string WToA(const std::wstring& ws, unsigned int cp = CP_ACP)
+{
+    if (!ws.empty())
+    {
+        std::string s(WideCharToMultiByte(cp, 0, ws.data(), -1, NULL, 0, NULL, NULL), ('\0'));
+        return s.substr(0, WideCharToMultiByte(cp, 0, ws.c_str(), -1, (LPSTR)s.data(), (int)s.size(), NULL, NULL) - 1);
+    }
+    return ("");
+}
+//通用版将string转化为wstring
+__inline std::wstring AToW(const std::string& s, unsigned int cp = CP_ACP)
+{
+    if (!s.empty())
+    {
+        std::wstring ws(MultiByteToWideChar(cp, 0, s.data(), -1, NULL, 0), (L'\0'));
+        return ws.substr(0, MultiByteToWideChar(cp, 0, s.data(), -1, (LPWSTR)ws.data(), (int)ws.size()) - 1);
+    }
+    return (L"");
+}
+__inline static
+#if !defined(UNICODE) && !defined(_UNICODE)
+std::string
+#else
+std::wstring
+#endif
+AToT(const std::string& str)
+{
+#if !defined(UNICODE) && !defined(_UNICODE)
+    return str;
+#else
+    return AToW(str);
+#endif
+}
+__inline static
+#if !defined(UNICODE) && !defined(_UNICODE)
+std::string
+#else
+std::wstring
+#endif
+WToT(const std::wstring& wstr)
+{
+#if !defined(UNICODE) && !defined(_UNICODE)
+    return WToA(wstr);
+#else
+    return wstr;
+#endif
+}
+__inline static std::string TToA(
+    const
+#if !defined(UNICODE) && !defined(_UNICODE)
+    std::string
+#else
+    std::wstring
+#endif
+    & tsT)
+{
+#if !defined(UNICODE) && !defined(_UNICODE)
+    return tsT;
+#else
+    return WToA(tsT);
+#endif
+}
+__inline static std::wstring TToW(
+    const
+#if !defined(UNICODE) && !defined(_UNICODE)
+    std::string
+#else
+    std::wstring
+#endif
+    & tsT)
+{
+#if !defined(UNICODE) && !defined(_UNICODE)
+    return AToW(tsT);
+#else
+    return tsT;
+#endif
+}
+#define WToUTF8(X) WToA(X, CP_UTF8)
+#define UTF8ToW(X) AToW(X, CP_UTF8)
+#define AToUTF8(X) WToUTF8(AToW(X))
+#define UTF8ToA(X) WToA(UTF8ToW(X))
+//将From编码转化为To编码
+__inline static std::string CodePage_FromTo(const std::string& str,
+    unsigned int from_codepage, unsigned int to_codepage)
+{
+    return WToA(AToW(str, from_codepage), to_codepage);
+}
+//将UTF8转化为ANSI
+__inline static std::string UTF8ToANSI(const std::string& str)
+{
+    return CodePage_FromTo(str, CP_UTF8, CP_ACP);
+}
+//将ANSI转化为UTF8
+__inline static std::string ANSIToUTF8(const std::string& str)
+{
+    return CodePage_FromTo(str, CP_ACP, CP_UTF8);
+}
+
+__inline static std::string GetAppExe()
+{
+    CHAR tFilePath[MAX_PATH] = { 0 };
+    GetModuleFileNameA(GetModuleHandleA(NULL), tFilePath, MAX_PATH);
+    return tFilePath;
+}
+__inline static std::string GetAppDir()
+{
+    auto path = GetAppExe();
+    return path.substr(0, path.rfind("\\"));
+}
 
 // This macro is the same as IMPLEMENT_OLECREATE, except it passes TRUE
 // for the bMultiInstance parameter to the COleObjectFactory constructor.

@@ -46,9 +46,11 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void OnClose();
+	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 	afx_msg LRESULT OnNcHitTest(CPoint point);
-	afx_msg void OnNcMouseMove(UINT uHitTest, CPoint point);
-	afx_msg void OnNcLButtonDown(UINT uHitTest, CPoint point);
+	afx_msg void OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS* lpncsp);
 	afx_msg LRESULT OnNotifyMsg(WPARAM wParam, LPARAM lParam); 
 	afx_msg LRESULT OnRestartExplorer(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnMenuConfig(void);
@@ -139,12 +141,31 @@ private:
 		
 		graphicsMem.Clear(Gdiplus::Color(0, 255, 255, 255)); 
 		graphicsMem.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
+		
+		PaintBackground(graphicsMem, rc);
 
 		PaintTitleBar(graphicsMem, rc);
 	
 		Gdiplus::Graphics graphics(hDC);
 		Gdiplus::CachedBitmap cachedBmp(&bitmapMem, &graphics);
 		graphics.DrawCachedBitmap(&cachedBmp, 0, 0);
+	}
+	void PaintBackground(Gdiplus::Graphics& graphicsMem, const CRect& rc)
+	{
+		Gdiplus::Image* bg = Gdiplus::Image::FromFile(bgImg.c_str());
+		if (bg != nullptr)
+		{
+			if (bg->GetLastStatus() == Gdiplus::Ok)
+			{
+				graphicsMem.DrawImage(bg, 0, 0, rc.Width(), rc.Height());
+			}
+			else
+			{
+				Gdiplus::SolidBrush bgBrush(Gdiplus::Color(60, 90, 20));
+				graphicsMem.FillRectangle(&bgBrush, rc.left, rc.top, rc.Width(), rc.Height());
+			}
+			delete bg;
+		}
 	}
 	void PaintTitleBar(Gdiplus::Graphics& graphicsMem, const CRect & rc)
 	{
@@ -171,12 +192,27 @@ private:
 		}
 		Gdiplus::FontFamily  fontFamily(L"Times New Roman");
 		Gdiplus::Font        font(&fontFamily, 28, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
-		Gdiplus::PointF      pointF(m_titleBarHeight +1.0f, 0.0f);
+		Gdiplus::PointF      pointF(m_titleBarHeight + 1.0f, 0.0f);
 		Gdiplus::SolidBrush  textBrush(Gdiplus::Color(255, 0, 0, 255));
 		graphicsMem.DrawString(L"TitleBar", -1, &font, pointF, &textBrush);
 	}
 	void NotifyUpdate()
 	{
-		InvalidateRect(NULL);
+		RedrawWindow();
+	}
+public:
+	std::wstring bgImg = AToW(GetAppDir() + "\\res\\bg.png");
+public:
+	void ShowOrHideWindow()
+	{
+		if (IsWindowVisible())
+		{
+			ShowWindow(SW_HIDE);
+		}
+		else
+		{
+			ShowWindow(SW_SHOW);
+			BringWindowToTop();
+		}
 	}
 };

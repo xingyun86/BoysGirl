@@ -73,21 +73,13 @@ void CFloatDlg::OnLButtonDown(UINT nFlags, CPoint point)
 void CFloatDlg::OnLButtonDblClk(UINT nFlags, CPoint point)
 {
 	// TODO: Add your message handler code here and/or call default
-	if (theApp.m_pMainDlg->IsWindowVisible())
-	{
-		theApp.m_pMainDlg->ShowWindow(SW_HIDE);
-	}
-	else
-	{
-		theApp.m_pMainDlg->ShowWindow(SW_SHOW);
-	}
 	CDialogEx::OnLButtonDblClk(nFlags, point);
+	theApp.m_pMainDlg->ShowOrHideWindow();
 }
 
 void CFloatDlg::ShowTopMost() 
 {
-	ShowWindow(SW_SHOWNORMAL);
-	SetWindowPos(&CWnd::wndTopMost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+	SetWindowPos(&CWnd::wndTopMost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
 }
 
 void CFloatDlg::LoadPosition() 

@@ -72,10 +72,11 @@ BEGIN_MESSAGE_MAP(CBoysGirlDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_CLOSE()
 	ON_WM_PAINT()
-	ON_WM_QUERYDRAGICON()
+	ON_WM_SIZE()
+	ON_WM_ACTIVATE()
+	ON_WM_NCCALCSIZE()
 	ON_WM_NCHITTEST()
-	ON_WM_NCMOUSEMOVE()
-	ON_WM_NCLBUTTONDOWN()
+	ON_WM_ERASEBKGND()
 	ON_COMMAND(RESTYPEID::IDMENU_CONFIG, OnMenuConfig)
 	ON_MESSAGE(WM_USER_NOTIFYICON, OnNotifyMsg)
 	ON_REGISTERED_MESSAGE(WMEX_TASKBARCREATED, OnRestartExplorer)
@@ -94,6 +95,31 @@ void CBoysGirlDlg::Init()
 	}
 
 	AddNotifyIcon();
+	SystemParametersInfo(SPI_SETDRAGFULLWINDOWS, FALSE, NULL, 0);
+
+/*#ifndef SPI_GETWINARRANGING
+#define SPI_GETWINARRANGING 0x0082
+#endif
+#ifndef SPI_SETWINARRANGING
+#define SPI_SETWINARRANGING 0x0083
+#endif
+#ifndef SPI_GETSNAPSIZING
+#define SPI_GETSNAPSIZING   0x008E
+#endif
+#ifndef SPI_SETSNAPSIZING
+#define SPI_SETSNAPSIZING   0x008F
+#endif*/
+	// ÍÏ×§Ç°
+	//BOOL fWinArrange;
+	//BOOL fSnapSizing;
+	//SystemParametersInfo(SPI_GETWINARRANGING, 0, (LPVOID)&fWinArrange, 0);
+	//SystemParametersInfo(SPI_GETSNAPSIZING, 0, (LPVOID)&fSnapSizing, 0);
+	//SystemParametersInfo(SPI_SETWINARRANGING, 0, (LPVOID)FALSE, 0);
+	//SystemParametersInfo(SPI_SETSNAPSIZING, 0, (LPVOID)TRUE, 0);
+	//SystemParametersInfo(SPI_SETSNAPSIZING, 0, NULL, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+	// ÍÏ×§ºó
+	//SystemParametersInfo(SPI_SETWINARRANGING, 0, (LPVOID)fWinArrange, 0);
+	//SystemParametersInfo(SPI_SETSNAPSIZING, 0, (LPVOID)fSnapSizing, 0);
 }
 void CBoysGirlDlg::Exit()
 {
@@ -120,6 +146,7 @@ void CBoysGirlDlg::Exit()
 		}
 		m_iconBitmapHandleMap.clear();
 	}
+	SystemParametersInfo(SPI_SETDRAGFULLWINDOWS, TRUE, NULL, 0);
 }
 BOOL CBoysGirlDlg::OnInitDialog()
 {
@@ -154,7 +181,7 @@ BOOL CBoysGirlDlg::OnInitDialog()
 
 	// TODO: Add extra initialization here
 
-	SetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE, GetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE) & (~WS_CAPTION) & (~WS_SIZEBOX) & (~WS_THICKFRAME));
+	SetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE, GetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE) & (~WS_CAPTION) | WS_SIZEBOX | WS_THICKFRAME);
 	SetWindowLongPtr(this->GetSafeHwnd(), GWL_EXSTYLE, GetWindowLongPtr(this->GetSafeHwnd(), GWL_EXSTYLE));
 	SetWindowPos(&CWnd::wndNoTopMost, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
 	theApp.m_pFloatDlg->ShowTopMost();
@@ -171,8 +198,8 @@ void CBoysGirlDlg::OnSysCommand(UINT nID, LPARAM lParam)
 	}
 	else
 	{
-		NotifyUpdate();
 		CDialogEx::OnSysCommand(nID, lParam);
+		NotifyUpdate();
 	}
 }
 
@@ -208,6 +235,15 @@ void CBoysGirlDlg::OnPaint()
 		ReleaseDC(&dc);
 		CDialogEx::OnPaint();
 	}
+}
+
+
+void CBoysGirlDlg::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
+{
+	CDialogEx::OnActivate(nState, pWndOther, bMinimized);
+
+	// TODO: Add your message handler code here
+	NotifyUpdate();
 }
 
 // The system calls this function to obtain the cursor to display while the user drags
@@ -327,39 +363,6 @@ LRESULT CBoysGirlDlg::OnNcHitTest(CPoint point)
 	//return CDialogEx::OnNcHitTest(point);
 }
 
-
-void CBoysGirlDlg::OnNcMouseMove(UINT uHitTest, CPoint point)
-{
-	// TODO: Add your message handler code here and/or call default
-	auto itMsgCursor = m_mapMsgCursor.find(uHitTest);
-	if (itMsgCursor != m_mapMsgCursor.end())
-	{
-		if (itMsgCursor->second.pCursor != NULL)
-		{
-			SetCursor(LoadCursor(NULL, itMsgCursor->second.pCursor));
-		}
-	}
-	CDialogEx::OnNcMouseMove(uHitTest, point);
-}
-
-void CBoysGirlDlg::OnNcLButtonDown(UINT uHitTest, CPoint point)
-{
-	// TODO: Add your message handler code here and/or call default
-	auto itMsgCursor = m_mapMsgCursor.find(uHitTest);
-	if (itMsgCursor != m_mapMsgCursor.end())
-	{
-		if (itMsgCursor->second.pCursor != NULL)
-		{
-			SetCursor(LoadCursor(NULL, itMsgCursor->second.pCursor));
-		}
-		SystemParametersInfo(SPI_SETDRAGFULLWINDOWS, FALSE, NULL, 0);
-		SendMessage(WM_SYSCOMMAND, itMsgCursor->second.uMsg, MAKELPARAM(point.x, point.y));
-		SystemParametersInfo(SPI_SETDRAGFULLWINDOWS, TRUE, NULL, 0);
-		NotifyUpdate();
-	}
-	
-	CDialogEx::OnNcLButtonDown(uHitTest, point);
-}
 void CBoysGirlDlg::OnMenuConfig(void)
 {
 	AfxMessageBox(TEXT("ÅäÖÃ"));
@@ -388,14 +391,7 @@ LRESULT CBoysGirlDlg::OnNotifyMsg(WPARAM wParam, LPARAM lParam)
 	break;
 	case WM_LBUTTONDBLCLK:
 	{
-		if (IsWindowVisible())
-		{
-			ShowWindow(SW_HIDE);
-		}
-		else
-		{
-			ShowWindow(SW_SHOW);
-		}
+		ShowOrHideWindow();
 	}
 	break;
 	}
@@ -406,4 +402,27 @@ LRESULT CBoysGirlDlg::OnRestartExplorer(WPARAM wParam, LPARAM lParam)
 {
 	AddNotifyIcon();
 	return TRUE;
+}
+void CBoysGirlDlg::OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS* lpncsp)
+{
+	if (bCalcValidRects == TRUE)
+	{
+		lpncsp->rgrc[2] = lpncsp->rgrc[1];
+		lpncsp->rgrc[1] = lpncsp->rgrc[0];
+	}
+}
+
+void CBoysGirlDlg::OnSize(UINT nType, int cx, int cy)
+{
+	// TODO: Add your message handler code here and/or call default
+	CDialogEx::OnSize(nType, cx, cy);
+	NotifyUpdate();
+}
+
+
+BOOL CBoysGirlDlg::OnEraseBkgnd(CDC* pDC)
+{
+	// TODO: Add your message handler code here and/or call default
+
+	return TRUE;// CDialogEx::OnEraseBkgnd(pDC);
 }
