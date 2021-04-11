@@ -83,6 +83,8 @@ BEGIN_MESSAGE_MAP(CBoysGirlDlg, CDialogEx)
 	ON_MESSAGE(WM_USER_NOTIFYICON, OnNotifyMsg)
 	ON_REGISTERED_MESSAGE(WMEX_TASKBARCREATED, OnRestartExplorer)
 	ON_WM_CTLCOLOR()
+	ON_WM_CREATE()
+	ON_WM_GETMINMAXINFO()
 END_MESSAGE_MAP()
 
 
@@ -184,8 +186,6 @@ BOOL CBoysGirlDlg::OnInitDialog()
 
 	// TODO: Add extra initialization here
 
-	SetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE, GetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE) & (~WS_CAPTION) | WS_SIZEBOX | WS_THICKFRAME);
-	SetWindowLongPtr(this->GetSafeHwnd(), GWL_EXSTYLE, GetWindowLongPtr(this->GetSafeHwnd(), GWL_EXSTYLE));
 	SetWindowPos(&CWnd::wndNoTopMost, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
 	theApp.m_pFloatDlg->ShowTopMost();
 
@@ -243,10 +243,10 @@ void CBoysGirlDlg::OnPaint()
 
 void CBoysGirlDlg::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 {
+	NotifyUpdate();
 	CDialogEx::OnActivate(nState, pWndOther, bMinimized);
 
 	// TODO: Add your message handler code here
-	NotifyUpdate();
 }
 
 // The system calls this function to obtain the cursor to display while the user drags
@@ -410,6 +410,19 @@ void CBoysGirlDlg::OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS* lpncsp)
 {
 	if (bCalcValidRects == TRUE)
 	{
+		if (IsZoomed())
+		{
+			CRect rc = {};
+			SystemParametersInfo(SPI_GETWORKAREA, 0, (PVOID)&rc, 0);
+			lpncsp->rgrc[0].left = 0;
+			lpncsp->rgrc[0].top = 0;
+			lpncsp->rgrc[0].right += lpncsp->lppos->x;
+			lpncsp->rgrc[0].bottom += lpncsp->lppos->y;
+			lpncsp->rgrc[0].right = rc.Width();
+			lpncsp->rgrc[0].bottom = rc.Height();
+			lpncsp->lppos->x = 0;
+			lpncsp->lppos->y = 0;
+		}
 		lpncsp->rgrc[2] = lpncsp->rgrc[1];
 		lpncsp->rgrc[1] = lpncsp->rgrc[0];
 	}
@@ -458,4 +471,33 @@ HBRUSH CBoysGirlDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 	}
 	// TODO:  Return a different brush if the default is not desired
 	return hbr;
+}
+
+
+int CBoysGirlDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+	if (CDialogEx::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+	// TODO:  Add your specialized creation code here
+	CRect rc = {};
+	SystemParametersInfo(SPI_GETWORKAREA, 0, (PVOID)&rc, 0);
+	SetClassLongPtr(this->GetSafeHwnd(), GCL_STYLE, GetClassLongPtr(this->GetSafeHwnd(), GCL_STYLE) | CS_DROPSHADOW);
+	SetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE, GetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE) & (~(WS_CAPTION | WS_BORDER | WS_EX_CLIENTEDGE)) | (WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SIZEBOX | WS_THICKFRAME));
+	SetWindowLongPtr(this->GetSafeHwnd(), GWL_EXSTYLE, GetWindowLongPtr(this->GetSafeHwnd(), GWL_EXSTYLE) | WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR);
+	return 0;
+}
+
+
+void CBoysGirlDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
+{
+	// TODO: Add your message handler code here and/or call default
+	// 调整最小宽度与高度
+	lpMMI->ptMinTrackSize.x = 800;
+	lpMMI->ptMinTrackSize.y = 600;
+	// 调整最大宽度与高度
+	lpMMI->ptMaxTrackSize.x = GetSystemMetrics(SM_CXSCREEN) + GetSystemMetrics(SM_CYFIXEDFRAME) + GetSystemMetrics(SM_CXEDGE) + GetSystemMetrics(SM_CXBORDER) + GetSystemMetrics(SM_CYFIXEDFRAME) + GetSystemMetrics(SM_CXEDGE) + GetSystemMetrics(SM_CXBORDER);
+	lpMMI->ptMaxTrackSize.y = GetSystemMetrics(SM_CYSCREEN);
+
+	CDialogEx::OnGetMinMaxInfo(lpMMI);
 }

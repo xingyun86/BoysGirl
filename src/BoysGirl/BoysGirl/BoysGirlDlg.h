@@ -51,6 +51,8 @@ protected:
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 	afx_msg LRESULT OnNcHitTest(CPoint point);
 	afx_msg void OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS* lpncsp);
@@ -205,7 +207,7 @@ private:
 	}
 	void NotifyUpdate()
 	{
-		RedrawWindow();
+		RedrawWindow(NULL, NULL, RDW_UPDATENOW | RDW_INVALIDATE);
 	}
 public:
 	std::wstring bgImg = AToW(GetAppDir() + "\\res\\bg.png");
