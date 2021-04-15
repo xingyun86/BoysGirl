@@ -62,7 +62,7 @@ void CCustomButton::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 		//控制的选中状态结束,去掉边框
 	}
 	// Draw the button frame.
-	//::DrawFrameControl(lpDrawItemStruct->hDC, &lpDrawItemStruct->rcItem, DFC_BUTTON, uStyle);
+	::DrawFrameControl(lpDrawItemStruct->hDC, &lpDrawItemStruct->rcItem, DFC_BUTTON, uStyle);
 	{
 		std::wstring btnokImgFile = AToW(GetAppDir() + "\\res\\btnbg.png");
 		Gdiplus::Graphics g(lpDrawItemStruct->hDC);
@@ -73,7 +73,7 @@ void CCustomButton::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 			{
 				//Gdiplus::SolidBrush borderBrush(Gdiplus::Color(100, 20, 20, 20));
 				//g.FillRectangle(&borderBrush, lpDrawItemStruct->rcItem.left, lpDrawItemStruct->rcItem.top, lpDrawItemStruct->rcItem.right, lpDrawItemStruct->rcItem.bottom);
-				g.DrawImage(btnokImg, lpDrawItemStruct->rcItem.left, lpDrawItemStruct->rcItem.top, lpDrawItemStruct->rcItem.right, lpDrawItemStruct->rcItem.bottom);
+				g.DrawImage(btnokImg, lpDrawItemStruct->rcItem.left+1, lpDrawItemStruct->rcItem.top+1, lpDrawItemStruct->rcItem.right-2, lpDrawItemStruct->rcItem.bottom-2);
 			}
 			delete btnokImg;
 		}
