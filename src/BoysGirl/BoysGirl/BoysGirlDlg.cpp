@@ -75,7 +75,6 @@ BEGIN_MESSAGE_MAP(CBoysGirlDlg, CDialogEx)
 	ON_WM_CLOSE()
 	ON_WM_PAINT()
 	ON_WM_SIZE()
-	ON_WM_ACTIVATE()
 	ON_WM_NCCALCSIZE()
 	ON_WM_NCHITTEST()
 	ON_WM_ERASEBKGND()
@@ -238,15 +237,6 @@ void CBoysGirlDlg::OnPaint()
 		ReleaseDC(&dc);
 		CDialogEx::OnPaint();
 	}
-}
-
-
-void CBoysGirlDlg::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
-{
-	NotifyUpdate();
-	CDialogEx::OnActivate(nState, pWndOther, bMinimized);
-
-	// TODO: Add your message handler code here
 }
 
 // The system calls this function to obtain the cursor to display while the user drags
@@ -483,8 +473,8 @@ int CBoysGirlDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	CRect rc = {};
 	SystemParametersInfo(SPI_GETWORKAREA, 0, (PVOID)&rc, 0);
 	SetClassLongPtr(this->GetSafeHwnd(), GCL_STYLE, GetClassLongPtr(this->GetSafeHwnd(), GCL_STYLE) | CS_DROPSHADOW);
-	SetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE, GetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE) & (~(WS_CAPTION | WS_BORDER | WS_EX_CLIENTEDGE)) | (WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SIZEBOX | WS_THICKFRAME));
-	SetWindowLongPtr(this->GetSafeHwnd(), GWL_EXSTYLE, GetWindowLongPtr(this->GetSafeHwnd(), GWL_EXSTYLE) | WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR);
+	SetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE, GetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE) | (WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SIZEBOX | WS_THICKFRAME) & (~(WS_CAPTION | WS_BORDER)));
+	SetWindowLongPtr(this->GetSafeHwnd(), GWL_EXSTYLE, GetWindowLongPtr(this->GetSafeHwnd(), GWL_EXSTYLE) | (WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR) & (~WS_EX_CLIENTEDGE));
 	return 0;
 }
 
