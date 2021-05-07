@@ -473,8 +473,17 @@ int CBoysGirlDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	CRect rc = {};
 	SystemParametersInfo(SPI_GETWORKAREA, 0, (PVOID)&rc, 0);
 	SetClassLongPtr(this->GetSafeHwnd(), GCL_STYLE, GetClassLongPtr(this->GetSafeHwnd(), GCL_STYLE) | CS_DROPSHADOW);
-	SetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE, GetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE) | (WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SIZEBOX | WS_THICKFRAME) & (~(WS_CAPTION | WS_BORDER)));
-	SetWindowLongPtr(this->GetSafeHwnd(), GWL_EXSTYLE, GetWindowLongPtr(this->GetSafeHwnd(), GWL_EXSTYLE) | (WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR) & (~WS_EX_CLIENTEDGE));
+
+	if (IsVistaOrLater())
+	{
+		SetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE, GetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE) | (WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SIZEBOX | WS_THICKFRAME) & (~WS_DLGFRAME) & (~WS_BORDER));
+		SetWindowLongPtr(this->GetSafeHwnd(), GWL_EXSTYLE, GetWindowLongPtr(this->GetSafeHwnd(), GWL_EXSTYLE) | (WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR) & (~WS_EX_CLIENTEDGE) & (~WS_EX_WINDOWEDGE));
+	}
+	else
+	{
+		SetWindowLongPtr(this->GetSafeHwnd(), GWL_STYLE, GetStyle()&(WS_OVERLAPPED | WS_VISIBLE | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_SIZEBOX | WS_THICKFRAME | WS_DLGFRAME));
+		SetWindowLongPtr(this->GetSafeHwnd(), GWL_EXSTYLE, GetExStyle()&(WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR));
+	}
 	return 0;
 }
 

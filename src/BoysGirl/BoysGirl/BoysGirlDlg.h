@@ -208,6 +208,18 @@ private:
 	{
 		RedrawWindow(NULL, NULL, RDW_UPDATENOW | RDW_INVALIDATE);
 	}
+	BOOL IsVistaOrLater()
+	{
+		OSVERSIONINFO osvi = { 0 };
+		ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
+		osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+		GetVersionEx(&osvi);
+		if (osvi.dwMajorVersion >= 6)
+		{
+			return TRUE;
+		}
+		return FALSE;
+	}
 public:
 	std::wstring bgImg = AToW(GetAppDir() + "\\res\\bg.png");
 	std::wstring btnokImg = AToW(GetAppDir() + "\\res\\btnok.png");
